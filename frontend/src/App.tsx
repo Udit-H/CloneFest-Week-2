@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import DashboardPage from './pages/DashboardPage';
 import UploadPage from './pages/UploadPage';
+import ImageUploader from './components/ImageUploader';
 
 function App() {
   return (
@@ -29,6 +30,8 @@ function App() {
           {/* In a real app, these would be protected and only accessible after login */}
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/upload" element={<UploadPage />} />
+          <Route path="/uploader" element={<ImageUploader />} />
+
 
           {/* --- Catch-all Route --- */}
           {/* This will redirect any unknown URL back to the homepage */}
