@@ -2,9 +2,11 @@
 FROM composer:2 as vendor
 
 WORKDIR /app
-COPY database/ database/
-COPY composer.json composer.json
-COPY composer.lock composer.lock
+# ADD the 'trial_backend/' prefix to these paths
+COPY trial_backend/database/ database/
+COPY trial_backend/composer.json composer.json
+COPY trial_backend/composer.lock composer.lock
+
 RUN composer install \
     --ignore-platform-reqs \
     --no-interaction \
@@ -16,15 +18,15 @@ RUN composer install \
 FROM php:8.2-fpm-alpine
 
 # Install required PHP extensions for Laravel
-RUN docker-php-ext-install pdo pdo_mysql
+RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql
 
 WORKDIR /var/www
-# Copy application code and dependencies
-COPY . .
+# ADD the 'trial_backend/' prefix here too
+COPY trial_backend/. .
 COPY --from=vendor /app/vendor/ ./vendor/
 
 # Set correct permissions
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+RUN chown -R www-data:www-data /var/w../ww/storage /var/www/bootstrap/cache
 RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
 # Expose port 8000 for the Laravel server
