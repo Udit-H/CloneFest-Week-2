@@ -36,4 +36,4 @@ RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 EXPOSE 8000
 
 # The command to start the application
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
+CMD php artisan migrate:fresh --force && php artisan serve --host=0.0.0.0 --port=$PORT
