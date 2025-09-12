@@ -17,6 +17,7 @@ model Image {
   tags      String[]
   albumId   String?
   album     Album?   @relation(fields: [albumId], references: [id])
+  vector    Float[]
 }
 
 model Album {

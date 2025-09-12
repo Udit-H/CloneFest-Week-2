@@ -92,6 +92,9 @@ app.post('/api/upload', authenticateJWT, upload.single('image'), async (req, res
   const tags = req.file.originalname.split('.')[0].split(/[\s-_]+/).map(tag => tag.toLowerCase());
   const albumName = tags[0] || 'Uncategorized';
 
+  // Simulate AI vector generation
+  const vector = Array.from({ length: 10 }, () => Math.random());
+
   try {
     const album = await prisma.album.upsert({
       where: { name: albumName },
@@ -104,6 +107,7 @@ app.post('/api/upload', authenticateJWT, upload.single('image'), async (req, res
         url: fileUrl,
         tags: tags,
         albumId: album.id,
+        vector: vector,
       },
     });
     res.status(201).json({ url: image.url });
@@ -146,6 +150,34 @@ app.get('/api/albums/:id', authenticateJWT, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error fetching album.' });
+  }
+});
+
+// Search for images
+app.get('/api/search', authenticateJWT, async (req, res) => {
+  const { q } = req.query;
+
+  if (!q) {
+    return res.status(400).json({ message: 'Search query is required.' });
+  }
+
+  const searchQuery = q.toString().toLowerCase();
+
+  try {
+    // In a real application, you would use the search query to generate a vector
+    // and then perform a similarity search in the database.
+    // For this simulation, we will perform a simple keyword search on the tags.
+    const images = await prisma.image.findMany({
+      where: {
+        tags: {
+          has: searchQuery,
+        },
+      },
+    });
+    res.json(images);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error searching for images.' });
   }
 });
 
