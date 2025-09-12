@@ -17,7 +17,11 @@ app.get('/', (req, res) => {
   res.send('Backend server is running!');
 });
 
-const JWT_SECRET = 'your-super-secret-key'; // Replace with an environment variable in production
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is not set.');
+}
 
 // Extend Express Request type to include user
 interface AuthRequest extends express.Request {
@@ -85,17 +89,63 @@ app.post('/api/upload', authenticateJWT, upload.single('image'), async (req, res
   }
 
   const fileUrl = `${BASE_URL}/storage/images/${req.file.filename}`;
+  const tags = req.file.originalname.split('.')[0].split(/[\s-_]+/).map(tag => tag.toLowerCase());
+  const albumName = tags[0] || 'Uncategorized';
 
   try {
+    const album = await prisma.album.upsert({
+      where: { name: albumName },
+      update: {},
+      create: { name: albumName },
+    });
+
     const image = await prisma.image.create({
       data: {
         url: fileUrl,
+        tags: tags,
+        albumId: album.id,
       },
     });
     res.status(201).json({ url: image.url });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error saving image to database.' });
+  }
+});
+
+// Get all albums
+app.get('/api/albums', authenticateJWT, async (req, res) => {
+  try {
+    const albums = await prisma.album.findMany({
+      include: {
+        _count: {
+          select: { images: true },
+        },
+      },
+    });
+    res.json(albums);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching albums.' });
+  }
+});
+
+// Get a single album with its images
+app.get('/api/albums/:id', authenticateJWT, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const album = await prisma.album.findUnique({
+      where: { id },
+      include: { images: true },
+    });
+    if (album) {
+      res.json(album);
+    } else {
+      res.status(404).json({ message: 'Album not found.' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching album.' });
   }
 });
 

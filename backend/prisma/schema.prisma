@@ -14,4 +14,14 @@ model Image {
   id        String   @id @default(cuid())
   url       String
   createdAt DateTime @default(now())
+  tags      String[]
+  albumId   String?
+  album     Album?   @relation(fields: [albumId], references: [id])
+}
+
+model Album {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  images    Image[]
+  createdAt DateTime @default(now())
 }
